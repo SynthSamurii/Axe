@@ -36,9 +36,25 @@
             margin: 10px 0 0;
             text-align: center;
         }
+
+
+        
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        window.onload = () => {
+            socket.emit('remove_all');
+            
+        }
+    </script>
 </head>
 <body>
+
+
+    
+
+
     <div class="content">
         <div class="link-container">
             <a href="{{ url_for('scoring') }}">

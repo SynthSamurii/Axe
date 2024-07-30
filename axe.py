@@ -25,6 +25,12 @@ def save_players(players):
     with open('data/players.json', 'w') as file:
         json.dump(players, file)
 
+
+@app.route('/reset_players', methods=['POST'])
+def reset_players():
+    save_players([])
+    return redirect(url_for('setup'))
+
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
     if request.method == 'POST':
@@ -45,14 +51,24 @@ def scoring():
 # Route for the zombies game page
 @app.route('/zombies')
 def zombies():
-    # Create a list of dictionaries to store zombie positions
+    with open('data/players.json', 'r') as file:
+        players = json.load(file)
+    scores = {player: [0] * 11 for player in players}
     zombies = []
     for i in range(11):
         # Generate random position for each zombie
-        top = random.randint(0, 750)  # Changed to fit the height of the image
+        top = random.randint(0, 650)  # Changed to fit the height of the image
         left = random.randint(-200, 1000)  # Leave some space at the sides
         zombies.append({"top": top, "left": left})
-    return render_template('zombies.html', zombies=zombies)
+    return render_template('zombies.html', zombies=zombies, players=players, scores=scores)
+    # # Create a list of dictionaries to store zombie positions
+    # zombies = []
+    # for i in range(11):
+    #     # Generate random position for each zombie
+    #     top = random.randint(0, 750)  # Changed to fit the height of the image
+    #     left = random.randint(-200, 1000)  # Leave some space at the sides
+    #     zombies.append({"top": top, "left": left})
+    # return render_template('zombies.html', zombies=zombies)
 
 # Route for the board page
 @app.route('/board')
@@ -82,6 +98,10 @@ def handle_show_zombies():
 @socketio.on('remove_zombie')
 def handle_remove_zombie(data):
     emit('hide_zombie', data)
+
+@socketio.on('remove_all')
+def handle_remove_all():
+    emit('hide_all', broadcast=True)
 
 
 # Main entry point

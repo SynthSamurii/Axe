@@ -67,6 +67,26 @@
         .current-frame {
             background-color: #00ff00;
         }
+
+        .congratulations {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid black;
+            text-align: center;
+        }
+
+        .congratulations button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <script>
@@ -75,7 +95,7 @@
         let currentFrame = 0;
         let currentPlayerIndex = 0;
         let frameSubIndex = 0;
-        const totalFrames = 10;
+        const totalFrames = 11;
         let scores = {};
 
         function updateFrame() {
@@ -122,6 +142,10 @@
 
             if (!scores[player]) {
                 scores[player] = Array(totalFrames).fill(0);
+            }
+
+            if (currentFrame >= totalFrames) {
+                showCongratulations();
             }
 
             const frameIndex = Math.floor(currentFrame / 2);
@@ -203,8 +227,38 @@
             })
         }
 
+        function showCongratulations() {
+            const players = Object.keys(scores);
+            let highestScore = 0;
+            let bestPlayer = '';
+
+            players.forEach(player => {
+                const totalScore = scores[player].reduce((a, b) => a + b, 0);
+                if (totalScore > highestScore) {
+                    highestScore = totalScore;
+                    bestPlayer = player;
+                }
+            });
+
+            const congratulationsBox = document.querySelector('.congratulations');
+            congratulationsBox.querySelector('.winner').innerText = bestPlayer;
+            congratulationsBox.style.display = 'block';
+        }
+
+        function restartGame() {
+            currentFrame = 0;
+            currentPlayerIndex = 0;
+            frameSubIndex = 0;
+            for (const player in scores) {
+                scores[player] = Array(totalFrames).fill(0);
+            }
+            document.querySelector('.congratulations').style.display = 'none';
+            updateTable();
+            updateFrame();
+        }
+
         window.onload = () => {
-            socket.emit('display_zombies');
+            socket.emit('show_zombies');
             // Initialize the scores object with existing scores if available
             scores = {};  // Initialize the scores object
 
@@ -236,19 +290,23 @@
         </table>
         <div class="button-container">
             <button class="score-button" onclick="submitScore(0)">0</button>
-            <button class="score-button" onclick="submitScore(1); removeZombie(1)">1</button>
-            <button class="score-button" onclick="submitScore(2); removeZombie(2)">2</button>
-            <button class="score-button" onclick="submitScore(3); removeZombie(3)">3</button>
-            <button class="score-button" onclick="submitScore(4); removeZombie(4)">4</button>
-            <button class="score-button" onclick="submitScore(5); removeZombie(5)">5</button>
-            <button class="score-button" onclick="submitScore(6); removeZombie(6)">6</button>
-            <button class="score-button" onclick="submitScore(7); removeZombie(7)">7</button>
-            <button class="score-button" onclick="submitScore(8); removeZombie(8)">8</button>
-            <button class="score-button" onclick="submitScore(9); removeZombie(9)">9</button>
+            <button class="score-button" onclick="submitScore(1); removeZombie(1);">1</button>
+            <button class="score-button" onclick="submitScore(2); removeZombie(2);">2</button>
+            <button class="score-button" onclick="submitScore(3); removeZombie(3);">3</button>
+            <button class="score-button" onclick="submitScore(4); removeZombie(4);">4</button>
+            <button class="score-button" onclick="submitScore(5); removeZombie(5);">5</button>
+            <button class="score-button" onclick="submitScore(6); removeZombie(6);">6</button>
+            <button class="score-button" onclick="submitScore(7); removeZombie(7);">7</button>
+            <button class="score-button" onclick="submitScore(8); removeZombie(8);">8</button>
+            <button class="score-button" onclick="submitScore(9); removeZombie(9);">9</button>
             <button class="score-button" onclick="submitScore(10); removeZombie(10)">10</button>
             <button class="score-button" onclick="submitScore(11); removeZombie(11)">11</button>
             <button class="undo-button" onclick="undoScore()">Undo</button>
         </div>
+    </div>
+    <div class="congratulations">
+        <h2>Congratulations, <span class="winner"></span>!</h2>
+        <button onclick="restartGame()">Restart</button>
     </div>
 </body>
 </html>

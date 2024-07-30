@@ -69,6 +69,16 @@
             right: 16.67%;
         }
 
+        .zombies-container {
+            position: relative;
+            width: 80vw;
+            height: 80vw;
+            max-width: 100%;
+            max-height: 100%;
+            background: url('/static/images/background.png') no-repeat center center;
+            background-size: cover;
+        }
+
         .zombies-container img {
             position: absolute;
             width: 10%;
@@ -97,22 +107,22 @@
             document.querySelector('.target-container').style.display = 'none';
             document.querySelector('.zombies-container').style.display = 'block';
 
-            // Add zombie information to the zombies container
             const zombiesContainer = document.querySelector('.zombies-container');
+            zombiesContainer.innerHTML = ''; // Clear any existing zombies
+
             for (let i = 1; i <= 11; i++) {
                 const zombieId = `zombie${i}`;
-                const zombieElement = document.getElementById(zombieId);
-                if (!zombieElement) {
-                    const newZombieElement = document.createElement('img');
-                    newZombieElement.src = `/static/images/zombie${i}.png`;
-                    zombiesContainer.appendChild(newZombieElement);
-                }
+                const newZombieElement = document.createElement('img');
+                newZombieElement.src = `/static/images/zombie${i}.png`;
+                newZombieElement.id = zombieId;
 
-                const scoreInput = document.createElement('input');
-                scoreInput.type = 'number';
-                scoreInput.id = `score-${zombieId}`;
-                scoreInput.placeholder = `Score for ${zombieId} (Enter a number between 0 and 100)`;
-                zombieElement.after(scoreInput);
+                // Randomly position the zombies
+                const randomTop = Math.random() * 90; // Random top position (0-90%)
+                const randomLeft = Math.random() * 90; // Random left position (0-90%)
+                newZombieElement.style.top = `${randomTop}%`;
+                newZombieElement.style.left = `${randomLeft}%`;
+
+                zombiesContainer.appendChild(newZombieElement);
             }
         });
 

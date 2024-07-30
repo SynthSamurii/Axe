@@ -67,6 +67,24 @@
         .current-frame {
             background-color: #00ff00;
         }
+
+        .congratulations {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid black;
+            text-align: center;
+        }
+
+        .congratulations button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <script>
@@ -76,31 +94,29 @@
         let currentPlayerIndex = 0;
         let frameSubIndex = 0;
         const totalFrames = 10;
-        let scores = {};
+        const scores = {};
 
         function updateFrame() {
-            let also_highlight = currentFrame
-            if(currentFrame % 2 == 0){
-                also_highlight += 1
-            }
-            else{
-                also_highlight -= 1
+            let also_highlight = currentFrame;
+            if (currentFrame % 2 === 0) {
+                also_highlight += 1;
+            } else {
+                also_highlight -= 1;
             }
 
-            if(also_highlight > 10){
-                also_highlight = -1
+            if (also_highlight > 10) {
+                also_highlight = -1;
             }
 
             const players = Object.keys(scores);
             const player = players[currentPlayerIndex];
 
             const playerFrame = document.querySelectorAll(".player");
-            playerFrame.forEach((element,index) => {
-                if (element.innerText == player){
-                    element.classList.add('current-frame')
+            playerFrame.forEach((element, index) => {
+                if (element.innerText === player) {
+                    element.classList.add('current-frame');
                 }
-            })
-
+            });
 
             const frameElements = document.querySelectorAll('.frame');
             frameElements.forEach((element, index) => {
@@ -110,10 +126,9 @@
                 }
             });
 
-            if(also_highlight >0){
-                frameElements.item(also_highlight).classList.add('current-frame')
+            if (also_highlight > 0) {
+                frameElements.item(also_highlight).classList.add('current-frame');
             }
-            
         }
 
         function submitScore(score) {
@@ -148,11 +163,10 @@
             updateFrame();
             updateTable();
 
-            if (currentFrame >= totalFrames * 2) {
+            if (currentFrame >= totalFrames) {
                 showCongratulations();
             }
         }
-
 
         function undoScore() {
             const players = Object.keys(scores);
@@ -186,12 +200,11 @@
                 const row = document.createElement('tr');
                 const playerNameCell = document.createElement('td');
                 playerNameCell.innerText = player;
-                playerNameCell.classList.add("player")
+                playerNameCell.classList.add("player");
                 row.appendChild(playerNameCell);
                 for (let i = 0; i < totalFrames; i++) {
                     const scoreCell = document.createElement('td');
                     scoreCell.innerText = scores[player][i] !== undefined ? scores[player][i] : '0';
-                    console.log(scores[player][i])
                     row.appendChild(scoreCell);
                 }
                 const totalCell = document.createElement('td');
@@ -204,11 +217,11 @@
             const player = players[currentPlayerIndex];
 
             const playerFrame = document.querySelectorAll(".player");
-            playerFrame.forEach((element,index) => {
-                if (element.innerText == player){
-                    element.classList.add('current-frame')
+            playerFrame.forEach((element, index) => {
+                if (element.innerText === player) {
+                    element.classList.add('current-frame');
                 }
-            })
+            });
         }
 
         function showCongratulations() {
@@ -228,7 +241,7 @@
             congratulationsBox.querySelector('.winner').innerText = bestPlayer;
             congratulationsBox.style.display = 'block';
         }
-        
+
         function restartGame() {
             currentFrame = 0;
             currentPlayerIndex = 0;
@@ -241,19 +254,12 @@
             updateFrame();
         }
 
-        
-
-
         window.onload = () => {
             socket.emit('show_target');
             // Initialize the scores object with existing scores if available
-            scores = {};  // Initialize the scores object
-
             {% for player in players %}
             scores["{{ player }}"] = {{ scores[player] }};
             {% endfor %}
-
-            
 
             updateTable();
             updateFrame();
@@ -261,7 +267,7 @@
     </script>
 </head>
 <body>
-    <a href="{{ url_for('index') }}" class="home-button">Home</a>
+    <a href="{{ url_for('index') }}" class="home-button" >Home</a>
     <div class="content">
         <table>
             <thead>
@@ -287,6 +293,10 @@
             <button class="score-button" onclick="submitScore(6)">6</button>
             <button class="undo-button" onclick="undoScore()">Undo</button>
         </div>
+    </div>
+    <div class="congratulations">
+        <h2>Congratulations, <span class="winner"></span>!</h2>
+        <button onclick="restartGame()">Restart</button>
     </div>
 </body>
 </html>
