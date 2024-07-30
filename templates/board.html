@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Board</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .target-container, .zombies-container {
+            position: absolute;
+            width: 80vw;
+            height: 80vw;
+            max-width: 800px;
+            max-height: 800px;
+            display: none;
+        }
+
+        .target-container {
+            position: relative;
+            width: 80vw;
+            height: 80vw;
+            max-width: 800px;
+            max-height: 800px;
+            background: radial-gradient(circle, 
+                #ffffff 8.33%, 
+                #ff0000 8.33%, 
+                #ff0000 25%, 
+                #ffcc00 25%, 
+                #ffcc00 41.67%, 
+                #0000ff 41.67%, 
+                #0000ff 58.33%, 
+                #00ff00 58.33%);
+            border-radius: 50%;
+            margin-top: 20px;
+        }
+
+        .bullseye {
+            position: absolute;
+            width: 16.67%;
+            height: 16.67%;
+            background: #ffffff;
+            border-radius: 50%;
+            top: 41.67%;
+            left: 41.67%;
+        }
+
+        .clutch {
+            position: absolute;
+            width: 8.33%;
+            height: 8.33%;
+            background: #ff00ff; /* Different color for clutch */
+            border-radius: 50%;
+        }
+
+        .clutch.left {
+            top: 16.67%;
+            left: 16.67%;
+        }
+
+        .clutch.right {
+            top: 16.67%;
+            right: 16.67%;
+        }
+
+        .zombies-container img {
+            position: absolute;
+            width: 10%;
+            height: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('display_target', () => {
+            document.querySelector('.target-container').style.display = 'block';
+            document.querySelector('.zombies-container').style.display = 'none';
+
+            // Add score information to the target container
+            const scoreContainer = document.createElement('div');
+            scoreContainer.classList.add('score-container');
+            document.querySelector('.target-container').appendChild(scoreContainer);
+        });
+
+        socket.on('display_zombies', () => {
+            document.querySelector('.target-container').style.display = 'none';
+            document.querySelector('.zombies-container').style.display = 'block';
+
+            // Add zombie information to the zombies container
+            const zombiesContainer = document.querySelector('.zombies-container');
+            for (let i = 1; i <= 11; i++) {
+                const zombieId = `zombie${i}`;
+                const zombieElement = document.getElementById(zombieId);
+                if (!zombieElement) {
+                    const newZombieElement = document.createElement('img');
+                    newZombieElement.src = `/static/images/zombie${i}.png`;
+                    zombiesContainer.appendChild(newZombieElement);
+                }
+
+                const scoreInput = document.createElement('input');
+                scoreInput.type = 'number';
+                scoreInput.id = `score-${zombieId}`;
+                scoreInput.placeholder = `Score for ${zombieId} (Enter a number between 0 and 100)`;
+                zombieElement.after(scoreInput);
+            }
+        });
+
+        socket.on('hide_all', () => {
+            document.querySelector('.target-container').style.display = 'none';
+            document.querySelector('.zombies-container').style.display = 'none';
+        });
+    </script>
+</head>
+<body>
+    <div class="target-container">
+        <div class="bullseye"></div>
+        <div class="clutch left"></div>
+        <div class="clutch right"></div>
+    </div>
+    <div class="zombies-container" style="display: none;">
+        {% for i in range(1, 11) %}
+          <img src="/static/images/zombie{{ i }}.png" class="zombie" id="zombie{{ i }}">
+          
+          
+        {% endfor %}
+    </div>
+</body>
+</html>

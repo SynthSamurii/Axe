@@ -1,0 +1,43 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.game-option {
+    margin: 20px;
+}
+
+.game-option img {
+    width: 200px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.game-option p {
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    font-size: 16px;
+    padding: 5px;
+    margin: 5px 0;
+}
+
+button {
+    font-size: 16px;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+}

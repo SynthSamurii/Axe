@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Axe Throwing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .link-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 20px; /* Adjust spacing between the links */
+        }
+
+        .link-container img {
+            max-width: 400px; /* Adjust size of images */
+            max-height: 200px; /* Adjust size of images */
+        }
+
+        .link-container p {
+            margin: 10px 0 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <div class="link-container">
+            <a href="{{ url_for('scoring') }}">
+                <img src="{{ url_for('static', filename='scoring.png') }}" alt="Scoring">
+                <p>Standard</p>
+            </a>
+        </div>
+        <div class="link-container">
+            <a href="{{ url_for('zombies') }}">
+                <img src="{{ url_for('static', filename='zombies.png') }}" alt="Zombies">
+                <p>Zombies</p>
+            </a>
+        </div>
+        <div class="link-container">
+            <a href="{{ url_for('board') }}">
+                <img src="{{ url_for('static', filename='target.png') }}" alt="Board">
+                <p>Board</p>
+            </a>
+        </div>
+        <div class="link-container">
+            <a href="{{ url_for('setup') }}">
+                <img src="{{ url_for('static', filename='settings.png') }}" alt="Setup">
+                <p>Setup</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

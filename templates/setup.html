@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Setup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <a href="{{ url_for('index') }}" class="home-button" style="padding: 10px; background-color: #3498db; color: white; text-decoration: none;">Home</a>
+
+    <h1 style="font-size: 2em; font-weight: bold; margin-top: 50px; color: #2ecc71;">Setup Players</h1>
+    
+    <form action="{{ url_for('setup') }}" method="POST" style="display: flex; justify-content: center; flex-direction: column; margin-top: 50px;">
+        <div id="player-inputs" style="width: 100%; max-width: 400px;">
+            {% for player in players %}
+            <div style="display: flex; align-items: center;">
+                <input type="text" name="players" value="{{ player }}" required style="flex:1; padding:5px; border: 2px solid #3498db; margin: 0 10px 20px 0; width: 500px; height: 100px; font-size: 40px;"/>
+            </div>
+            {% endfor %}
+            
+            {% if not players %}
+                <input type="text" name="players" placeholder="Player Name" required style="flex:1; padding:5px; border: 2px solid #3498db; margin: 0 10px 20px 0; width: 500px; height: 100px; font-size: 40px;"/>
+            {% endif %}
+        </div>
+        
+        <button type="button" onclick="addPlayer()" style="padding: 10px; background-color: #3498db; color: white; height: 50px; font-size: 20px; ">Add Player</button>
+        
+        <input type="submit" value="Save Players" style="background-color:#2ecc71 ; padding: 10px; border: none; margin: 5px 0; width: 100%; height: 50px; font-size: 20px;"/>
+        
+        <input type="submit" formaction="{{ url_for('setup') }}" value="New Group" style="background-color:#e74c3c ; padding: 10px; border: none; margin: 5px 0; width: 100%; height: 50px; font-size: 20px;">
+    </form>
+    
+    <script>
+        function addPlayer() {
+            const playerInputs = document.getElementById('player-inputs');
+            const newInput = document.createElement('div');
+            newInput.innerHTML = `<input type="text" name="players" placeholder="Player Name" required style="flex:1; padding:5px; border: 2px solid #3498db; margin: 0 10px 20px 0; width: 500px; height: 100px; font-size: 40px;">`;
+            playerInputs.appendChild(newInput);
+        }
+    </script>
+    </body>
+</html>

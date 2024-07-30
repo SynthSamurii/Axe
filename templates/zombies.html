@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Zombies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .content {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .score-button, .undo-button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .home-button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            text-decoration: none;
+            background-color: #000;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .current-frame {
+            background-color: #00ff00;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        let currentFrame = 0;
+        let currentPlayerIndex = 0;
+        let frameSubIndex = 0;
+        const totalFrames = 10;
+        let scores = {};
+
+        function updateFrame() {
+            let also_highlight = currentFrame
+            if(currentFrame % 2 == 0){
+                also_highlight += 1
+            }
+            else{
+                also_highlight -= 1
+            }
+
+            if(also_highlight > 10){
+                also_highlight = -1
+            }
+
+            const players = Object.keys(scores);
+            const player = players[currentPlayerIndex];
+
+            const playerFrame = document.querySelectorAll(".player");
+            playerFrame.forEach((element,index) => {
+                if (element.innerText == player){
+                    element.classList.add('current-frame')
+                }
+            })
+
+
+            const frameElements = document.querySelectorAll('.frame');
+            frameElements.forEach((element, index) => {
+                element.classList.remove('current-frame');
+                if (index === currentFrame) {
+                    element.classList.add('current-frame');
+                }
+            });
+
+            if(also_highlight >0){
+                frameElements.item(also_highlight).classList.add('current-frame')
+            }
+            
+        }
+
+        function submitScore(score) {
+            const players = Object.keys(scores);
+            const player = players[currentPlayerIndex];
+
+            if (!scores[player]) {
+                scores[player] = Array(totalFrames).fill(0);
+            }
+
+            const frameIndex = Math.floor(currentFrame / 2);
+            scores[player][frameIndex * 2 + frameSubIndex] = score;
+
+            frameSubIndex++;
+            if (frameSubIndex === 2) {
+                frameSubIndex = 0;
+                currentPlayerIndex++;
+                if (currentPlayerIndex === players.length) {
+                    currentPlayerIndex = 0;
+                    currentFrame += 2;
+                }
+            }
+
+            socket.emit('score_update', { score: score });
+
+            updateFrame();
+            updateTable();
+        }
+
+        function removeZombie(zombieNumber) {
+            socket.emit('remove_zombie', { zombieNumber: zombieNumber });
+        }
+
+        function undoScore() {
+            const players = Object.keys(scores);
+
+            if (frameSubIndex === 0 && currentPlayerIndex === 0 && currentFrame === 0) {
+                return; // Nothing to undo
+            }
+
+            if (frameSubIndex === 0) {
+                frameSubIndex = 1;
+                currentPlayerIndex = (currentPlayerIndex - 1 + players.length) % players.length;
+                if (currentPlayerIndex === players.length - 1) {
+                    currentFrame -= 2;
+                }
+            } else {
+                frameSubIndex--;
+            }
+
+            const player = players[currentPlayerIndex];
+            const frameIndex = Math.floor(currentFrame / 2);
+            scores[player][frameIndex * 2 + frameSubIndex] = 0;
+
+            updateFrame();
+            updateTable();
+        }
+
+        function updateTable() {
+            const tableBody = document.querySelector('tbody');
+            tableBody.innerHTML = '';
+            for (const player in scores) {
+                const row = document.createElement('tr');
+                const playerNameCell = document.createElement('td');
+                playerNameCell.innerText = player;
+                playerNameCell.classList.add("player")
+                row.appendChild(playerNameCell);
+                for (let i = 0; i < totalFrames; i++) {
+                    const scoreCell = document.createElement('td');
+                    scoreCell.innerText = scores[player][i] !== undefined ? scores[player][i] : '0';
+                    row.appendChild(scoreCell);
+                }
+                const totalCell = document.createElement('td');
+                totalCell.innerText = scores[player].reduce((a, b) => a + b, 0);
+                row.appendChild(totalCell);
+                tableBody.appendChild(row);
+            }
+
+            const players = Object.keys(scores);
+            const player = players[currentPlayerIndex];
+
+            const playerFrame = document.querySelectorAll(".player");
+            playerFrame.forEach((element,index) => {
+                if (element.innerText == player){
+                    element.classList.add('current-frame')
+                }
+            })
+        }
+
+        window.onload = () => {
+            socket.emit('display_zombies');
+            // Initialize the scores object with existing scores if available
+            scores = {};  // Initialize the scores object
+
+            {% for player in players %}
+            scores["{{ player }}"] = {{ scores[player] }};
+            {% endfor %}
+
+            updateTable();
+            updateFrame();
+        }
+    </script>
+</head>
+<body>
+    <a href="{{ url_for('index') }}" class="home-button">Home</a>
+    <div class="content">
+        <table>
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    {% for i in range(1, 11) %}
+                    <th class="frame">Frame {{ i }}</th>
+                    {% endfor %}
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Scores will be populated by JavaScript -->
+            </tbody>
+        </table>
+        <div class="button-container">
+            <button class="score-button" onclick="submitScore(0)">0</button>
+            <button class="score-button" onclick="submitScore(1); removeZombie(1)">1</button>
+            <button class="score-button" onclick="submitScore(2); removeZombie(2)">2</button>
+            <button class="score-button" onclick="submitScore(3); removeZombie(3)">3</button>
+            <button class="score-button" onclick="submitScore(4); removeZombie(4)">4</button>
+            <button class="score-button" onclick="submitScore(5); removeZombie(5)">5</button>
+            <button class="score-button" onclick="submitScore(6); removeZombie(6)">6</button>
+            <button class="score-button" onclick="submitScore(7); removeZombie(7)">7</button>
+            <button class="score-button" onclick="submitScore(8); removeZombie(8)">8</button>
+            <button class="score-button" onclick="submitScore(9); removeZombie(9)">9</button>
+            <button class="score-button" onclick="submitScore(10); removeZombie(10)">10</button>
+            <button class="score-button" onclick="submitScore(11); removeZombie(11)">11</button>
+            <button class="undo-button" onclick="undoScore()">Undo</button>
+        </div>
+    </div>
+</body>
+</html>
