@@ -88,6 +88,11 @@
         .hidden {
             display: none;
         }
+
+        .zombie {
+            position: absolute;
+        }
+
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <script>
@@ -112,9 +117,12 @@
 
             for (let i = 1; i <= 11; i++) {
                 const zombieId = `zombie${i}`;
+                // zombieElement.classList.add('zombie');
                 const newZombieElement = document.createElement('img');
                 newZombieElement.src = `/static/images/zombie${i}.png`;
                 newZombieElement.id = zombieId;
+                newZombieElement.classList.add('zombie-'+i);
+                console.log('zombie-'+i)
 
                 // Randomly position the zombies
                 const randomTop = Math.random() * 90; // Random top position (0-90%)
@@ -130,6 +138,32 @@
             document.querySelector('.target-container').style.display = 'none';
             document.querySelector('.zombies-container').style.display = 'none';
         });
+
+        socket.on('update_zombies', (data) => {
+            const playerZombies = data.zombies;
+            const zombiesContainer = document.querySelector('.zombies-container');
+            zombiesContainer.innerHTML = ''; // Clear existing zombies
+
+            playerZombies.forEach(zombieNumber => {
+                const zombieElement = document.createElement('img');
+                zombieElement.src = `/static/images/zombie${zombieNumber}.png`;
+                zombieElement.classList.add('zombie');
+                zombieElement.classList.add('zombie-'+zombieNumber);
+                console.log('zombie-'+zombieNumber)
+                zombieElement.style.top = `${Math.random() * 90}%`;
+                zombieElement.style.left = `${Math.random() * 90}%`;
+                zombiesContainer.appendChild(zombieElement);
+            });
+        });
+
+        socket.on('remove_zombie', (zombie_number) =>{
+            var zombieElement = document.getElementsByClassName("zombie-"+zombie_number)[0]
+            zombieElement.remove()
+        });
+
+        
+        
+
     </script>
 </head>
 <body>
@@ -145,5 +179,7 @@
           
         {% endfor %}
     </div>
+    <div class="target-container"></div>
+    <div class="zombies-container"></div>
 </body>
 </html>

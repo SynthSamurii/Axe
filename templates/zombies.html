@@ -86,17 +86,33 @@
             cursor: pointer;
         }
 
+        .zombie {
+            position: absolute;
+        }
+
+        .current-frame {
+            background-color: #00ff00;
+        }
+
+        .zombies-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
 
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
     <script>
         const socket = io();
-
+        
+        
         let currentFrame = 0;
         let currentPlayerIndex = 0;
         let frameSubIndex = 0;
         const totalFrames = 11;
         let scores = {};
+        let zombies = {};
+
 
         function updateFrame() {
             let also_highlight = currentFrame
@@ -138,7 +154,7 @@
 
         function submitScore(score) {
             const players = Object.keys(scores);
-            const player = players[currentPlayerIndex];
+            let player = players[currentPlayerIndex];
 
             if (!scores[player]) {
                 scores[player] = Array(totalFrames).fill(0);
@@ -161,14 +177,19 @@
                 }
             }
 
-            socket.emit('score_update', { score: score });
-
             updateFrame();
             updateTable();
+
+            let currentPlayer = players[currentPlayerIndex];
+            if(player != currentPlayer)
+                socket.emit('redraw_board', { player: currentPlayer});
         }
 
         function removeZombie(zombieNumber) {
-            socket.emit('remove_zombie', { zombieNumber: zombieNumber });
+            var currentPlayer = players[currentPlayerIndex];
+            console.log(`Removing zombie ${zombieNumber} for player ${currentPlayer}`);
+            
+            socket.emit('remove_zombie', { player: currentPlayer, zombie_number: zombieNumber });
         }
 
         function undoScore() {
@@ -194,6 +215,8 @@
 
             updateFrame();
             updateTable();
+            socket.emit('show_zombies');
+            socket.emit('update_zombies', {'player': player, 'zombies': player_zombies[player]}, broadcast=True)
         }
 
         function updateTable() {
@@ -261,13 +284,24 @@
             socket.emit('show_zombies');
             // Initialize the scores object with existing scores if available
             scores = {};  // Initialize the scores object
+            zombies = {};
 
             {% for player in players %}
             scores["{{ player }}"] = {{ scores[player] }};
+            zombies["{{ player }}"] = {{ zombies[player] }};
             {% endfor %}
+
+            const players = Object.keys(scores);
+            var currentPlayer = players[currentPlayerIndex];
 
             updateTable();
             updateFrame();
+        }
+
+        function removeZombie(zombieNumber) {
+            const players = Object.keys(scores);
+            var currentPlayer = players[currentPlayerIndex];
+            socket.emit('remove_zombie', { player: currentPlayer, zombie_number: zombieNumber });
         }
     </script>
 </head>
@@ -290,20 +324,21 @@
         </table>
         <div class="button-container">
             <button class="score-button" onclick="submitScore(0)">0</button>
-            <button class="score-button" onclick="submitScore(1); removeZombie(1);">1</button>
-            <button class="score-button" onclick="submitScore(2); removeZombie(2);">2</button>
-            <button class="score-button" onclick="submitScore(3); removeZombie(3);">3</button>
-            <button class="score-button" onclick="submitScore(4); removeZombie(4);">4</button>
-            <button class="score-button" onclick="submitScore(5); removeZombie(5);">5</button>
-            <button class="score-button" onclick="submitScore(6); removeZombie(6);">6</button>
-            <button class="score-button" onclick="submitScore(7); removeZombie(7);">7</button>
-            <button class="score-button" onclick="submitScore(8); removeZombie(8);">8</button>
-            <button class="score-button" onclick="submitScore(9); removeZombie(9);">9</button>
-            <button class="score-button" onclick="submitScore(10); removeZombie(10)">10</button>
-            <button class="score-button" onclick="submitScore(11); removeZombie(11)">11</button>
+            <button class="score-button" onclick="removeZombie(1); submitScore(1); ">1</button>
+            <button class="score-button" onclick="removeZombie(2); submitScore(2); ">2</button>
+            <button class="score-button" onclick="removeZombie(3); submitScore(3); ">3</button>
+            <button class="score-button" onclick="removeZombie(4); submitScore(4); ">4</button>
+            <button class="score-button" onclick="removeZombie(5); submitScore(5); ">5</button>
+            <button class="score-button" onclick="removeZombie(6);submitScore(6); ">6</button>
+            <button class="score-button" onclick="removeZombie(7); submitScore(7); ">7</button>
+            <button class="score-button" onclick="removeZombie(8); submitScore(8); ">8</button>
+            <button class="score-button" onclick="removeZombie(9); submitScore(9);">9</button>
+            <button class="score-button" onclick=" removeZombie(10); submitScore(10);">10</button>
+            <button class="score-button" onclick="removeZombie(11); submitScore(11); ">11</button>
             <button class="undo-button" onclick="undoScore()">Undo</button>
         </div>
     </div>
+    <div class="zombies-container"></div>
     <div class="congratulations">
         <h2>Congratulations, <span class="winner"></span>!</h2>
         <button onclick="restartGame()">Restart</button>

@@ -7,6 +7,8 @@ import random
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+
+
 # Route for the index page
 @app.route('/')
 def index():
@@ -19,6 +21,10 @@ def load_players():
             return json.load(file)
     except FileNotFoundError:
         return []
+    
+players = load_players()
+player_scores = {player: [0] * 10 for player in players}
+player_zombies = {player: list(range(1, 12)) for player in players}  # Each player starts with all zombies active
 
 # Save players to a file
 def save_players(players):
@@ -51,16 +57,16 @@ def scoring():
 # Route for the zombies game page
 @app.route('/zombies')
 def zombies():
-    with open('data/players.json', 'r') as file:
-        players = json.load(file)
-    scores = {player: [0] * 11 for player in players}
-    zombies = []
-    for i in range(11):
-        # Generate random position for each zombie
-        top = random.randint(0, 650)  # Changed to fit the height of the image
-        left = random.randint(-200, 1000)  # Leave some space at the sides
-        zombies.append({"top": top, "left": left})
-    return render_template('zombies.html', zombies=zombies, players=players, scores=scores)
+    # with open('data/players.json', 'r') as file:
+    #     players = json.load(file)
+    # scores = {player: [0] * 11 for player in players}
+    # zombies = []
+    # for i in range(11):
+    #     # Generate random position for each zombie
+    #     top = random.randint(0, 650)  # Changed to fit the height of the image
+    #     left = random.randint(-200, 1000)  # Leave some space at the sides
+    #     zombies.append({"top": top, "left": left})
+    return render_template('zombies.html', zombies=player_zombies, players=players, scores=player_scores)
     # # Create a list of dictionaries to store zombie positions
     # zombies = []
     # for i in range(11):
@@ -69,6 +75,27 @@ def zombies():
     #     left = random.randint(-200, 1000)  # Leave some space at the sides
     #     zombies.append({"top": top, "left": left})
     # return render_template('zombies.html', zombies=zombies)
+
+
+@socketio.on('remove_zombie')
+def handle_remove_zombie(data):
+    print("REMOVING")
+    print(f"Received request to remove zombie {data['zombie_number']} for player {data['player']}")
+    player = data['player']
+    zombie_number = data['zombie_number']
+    if zombie_number in player_zombies[player]:
+        player_zombies[player].remove(zombie_number)
+        print(f"Zombie {zombie_number} removed for player {player}. Remaining zombies: {player_zombies[player]}")
+
+        emit('remove_zombie', zombie_number, broadcast=True)
+
+@socketio.on('redraw_board')
+def handle_remove_zombie(data):
+    print("UPDATING BOARD")
+    player = data['player']
+    emit('update_zombies', {'player': player, 'zombies': player_zombies[player]}, broadcast=True)
+
+
 
 # Route for the board page
 @app.route('/board')
@@ -88,21 +115,25 @@ def save_setup():
 def handle_show_target():
     emit('display_target', broadcast=True)
 
-# Socket event to show zombies for zombies game
+
 @socketio.on('show_zombies')
 def handle_show_zombies():
-    emit('display_zombies', broadcast=True)
+    for player, zombies in player_zombies.items():
+        emit('display_zombies', {'player': player, 'zombies': zombies}, broadcast=True)
+# # Socket event to show zombies for zombies game
+# @socketio.on('show_zombies')
+# def handle_show_zombies():
+#     emit('display_zombies', 'update_zombies', broadcast=True)
 
 
 
-@socketio.on('remove_zombie')
-def handle_remove_zombie(data):
-    emit('hide_zombie', data)
+# @socketio.on('remove_zombie')
+# def handle_remove_zombie(data):
+#     emit('hide_zombie', data)
 
 @socketio.on('remove_all')
 def handle_remove_all():
     emit('hide_all', broadcast=True)
-
 
 # Main entry point
 if __name__ == '__main__':
