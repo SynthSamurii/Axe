@@ -276,12 +276,14 @@
                 scores[player] = Array(totalFrames).fill(0);
             }
             document.querySelector('.congratulations').style.display = 'none';
+            socket.emit("RESET_ZOMBIES");
             updateTable();
             updateFrame();
         }
 
         window.onload = () => {
             socket.emit('show_zombies');
+            socket.emit("RESET_ZOMBIES");
             // Initialize the scores object with existing scores if available
             scores = {};  // Initialize the scores object
             zombies = {};

@@ -76,6 +76,11 @@ def zombies():
     #     zombies.append({"top": top, "left": left})
     # return render_template('zombies.html', zombies=zombies)
 
+@socketio.on("RESET_ZOMBIES")
+def reset_zombies():
+    global player_zombies
+    player_zombies = {player: list(range(1, 12)) for player in players}  # Each player starts with all zombies active
+
 
 @socketio.on('remove_zombie')
 def handle_remove_zombie(data):
@@ -137,4 +142,4 @@ def handle_remove_all():
 
 # Main entry point
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, port=5000, host='0.0.0.0', debug=True)
