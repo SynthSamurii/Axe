@@ -115,7 +115,7 @@
             const zombiesContainer = document.querySelector('.zombies-container');
             zombiesContainer.innerHTML = ''; // Clear any existing zombies
 
-            for (let i = 1; i <= 11; i++) {
+            for (let i = 1; i <= 8; i++) {
                 const zombieId = `zombie${i}`;
                 // zombieElement.classList.add('zombie');
                 const newZombieElement = document.createElement('img');
@@ -125,14 +125,18 @@
                 console.log('zombie-'+i)
 
                 // Randomly position the zombies
-                const randomTop = Math.random() * 90; // Random top position (0-90%)
-                const randomLeft = Math.random() * 90; // Random left position (0-90%)
+                const randomTop = getRandomArbitrary(0,75); // Random top position (0-90%)
+                const randomLeft = getRandomArbitrary(20,70); // Random left position (0-90%)
                 newZombieElement.style.top = `${randomTop}%`;
                 newZombieElement.style.left = `${randomLeft}%`;
 
                 zombiesContainer.appendChild(newZombieElement);
             }
         });
+
+        function getRandomArbitrary(min, max) {
+            return Math.random() * (max - min) + min;
+        }
 
         socket.on('hide_all', () => {
             document.querySelector('.target-container').style.display = 'none';
